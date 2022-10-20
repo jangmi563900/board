@@ -31,7 +31,9 @@ urlpatterns = [
     path('article/detail/<int:id>/', views.detail),
     path('article/update/<int:id>/', views.update),
     path('article/delete/<int:id>/', views.delete),
-    
+
+   path('article/reply/<int:id>/', views.reply),
+ 
     path('map/', views.map),
     path('map_data/', views.map_data),
     path('map_data2/', views.map_data2),

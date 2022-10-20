@@ -1,6 +1,6 @@
 from django.http import HttpResponse
 from django.http import HttpResponseRedirect
-from django.shortcuts import render
+from django.shortcuts import redirect, render
 import hashlib
 
 def index(request):
@@ -12,7 +12,7 @@ def index(request):
   return render(request, 'index.html')
 
 from django.http import HttpResponseRedirect
-from article.models import User
+from article.models import Reply, User
 
 def signup(request):
   if request.method == 'POST':
@@ -94,7 +94,7 @@ def list(request):
  #전체 페이지 수가 end_page 보다 적다면...
   if p.num_pages < end_page:
     end_page = p.num_pages
-    
+
   context = { 
     'article_list' : article_list ,
     'page_info' : range(start_page, end_page + 1)
@@ -108,6 +108,19 @@ def detail(request, id):
     'article' : article 
   }
   return render(request, 'detail.html', context)
+
+def reply(request, id):
+  email = request.session.get('email')
+  user = User.objects.get(email=email)
+  article = Article.objects.get(id=id)
+  content = request.GET.get('content')
+
+  reply = Reply(content=content, user=user, article=article)
+  reply.save()
+
+  return redirect('/article/detail/%s/' % id)
+
+
 
 def update(request, id):
   # select * from article where id = ?
