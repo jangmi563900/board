@@ -36,6 +36,7 @@ def signin(request):
       # select * from user where email=? and pwd=?
       user = User.objects.get(email=email, pwd=pwd)
       request.session['email'] = email
+      request.session[ 'name'] = user.name
       return render(request, 'signin_success.html')
     except:
       return render(request, 'signin_fail.html')
@@ -68,11 +69,35 @@ def write(request):
 
   return render(request, 'write.html')
 
+from django.core.paginator import Paginator
+
 def list(request):
+  page = request.GET.get('page')
+
+ 
   # select * from article order by id desc
   article_list = Article.objects.order_by('-id')
+
+  p = Paginator(article_list, 10)
+  try:
+    page = int(page)
+    article_list = p.page(page)
+  except:
+    page = 1
+    article_list = p.page(page)
+
+  # 7 -> 1    183 -> 181
+  # 10?? -> 11
+  start_page = (page - 1) // 10 * 10 + 1 #페이지네이션 중 시작 페이지
+  end_page = start_page + 9  # 페이지네이션 중 마지막 페이지
+
+ #전체 페이지 수가 end_page 보다 적다면...
+  if p.num_pages < end_page:
+    end_page = p.num_pages
+    
   context = { 
-    'article_list' : article_list 
+    'article_list' : article_list ,
+    'page_info' : range(start_page, end_page + 1)
   }
   return render(request, 'list.html', context)
 
@@ -87,6 +112,17 @@ def detail(request, id):
 def update(request, id):
   # select * from article where id = ?
   article = Article.objects.get(id=id)
+
+    # 로그인한 사용자의 정보 확인
+  name = request.session.get('name')
+    # 작성자명 확인
+  if article.user.name != name:
+    return HttpResponse('''
+      <script>
+         alert(" 작성자만 수정할 수 있습니다.");
+          location = '/article/detail/%s/";
+      </script>
+    ''' % id)
 
   if request.method == 'POST':
     title = request.POST.get('title')
